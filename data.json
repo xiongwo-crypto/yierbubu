@@ -17,7 +17,7 @@
     },
     {
       "id": "id-mvnzov0f-tldjb0",
-      "name": "臭白熊",
+      "name": "白熊",
       "emoji": "🐻‍❄️",
       "color": "#60a5fa",
       "avatarImg": "avatars/baixiong.png",
@@ -33,6 +33,12 @@
           "ts": 1792942710319,
           "points": 49.6,
           "reason": "初始分"
+        },
+        {
+          "id": "id-mvnzzevs-dktt7g",
+          "ts": 1792943023384,
+          "points": -2,
+          "reason": "功能不够完善"
         }
       ]
     }
