@@ -1,0 +1,1315 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="color-scheme" content="dark" />
+<title>🐻 熊窝积分榜</title>
+<style>
+:root{
+  --bg:#080817;
+  --card:rgba(255,255,255,.05);
+  --line:rgba(255,255,255,.11);
+  --text:#eef1ff;
+  --muted:#8f96c0;
+  --pos:#34d399;
+  --neg:#fb7185;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  font-family:"PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,-apple-system,sans-serif;
+  background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;
+}
+
+/* ---------- 背景氛围 ---------- */
+.orb{position:fixed;border-radius:50%;filter:blur(100px);pointer-events:none;z-index:0}
+.orb1{width:480px;height:480px;background:#7c3aed;top:-140px;left:-110px;opacity:.55;animation:drift1 18s ease-in-out infinite alternate}
+.orb2{width:430px;height:430px;background:#0ea5e9;bottom:-140px;right:-90px;opacity:.5;animation:drift2 22s ease-in-out infinite alternate}
+.orb3{width:360px;height:360px;background:#ec4899;top:42%;left:56%;opacity:.32;animation:drift3 26s ease-in-out infinite alternate}
+@keyframes drift1{to{transform:translate(130px,90px) scale(1.15)}}
+@keyframes drift2{to{transform:translate(-110px,-80px) scale(1.1)}}
+@keyframes drift3{to{transform:translate(-140px,60px) scale(1.2)}}
+.grid-overlay{
+  position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:linear-gradient(rgba(255,255,255,.03) 1px,transparent 1px),
+             linear-gradient(90deg,rgba(255,255,255,.03) 1px,transparent 1px);
+  background-size:44px 44px;
+  -webkit-mask-image:radial-gradient(ellipse at center,black 25%,transparent 75%);
+  mask-image:radial-gradient(ellipse at center,black 25%,transparent 75%);
+}
+
+.wrap{position:relative;z-index:1;max-width:1200px;margin:0 auto;padding:44px 24px 70px}
+
+/* ---------- 头部 ---------- */
+header{text-align:center}
+h1{
+  display:inline-block;font-size:44px;font-weight:800;letter-spacing:2px;
+  background:linear-gradient(90deg,#fbbf24,#f472b6,#a78bfa,#22d3ee,#fbbf24);
+  background-size:300% 100%;
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 0 22px rgba(167,139,250,.35));
+  animation:hue 8s linear infinite;
+}
+@keyframes hue{to{background-position:300% 0}}
+.sub{margin-top:10px;color:var(--muted);font-size:14.5px;letter-spacing:1px}
+.actions{margin-top:22px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+
+.btn{padding:11px 24px;border-radius:13px;font-size:14.5px;cursor:pointer;border:1px solid transparent;transition:.2s;font-weight:600}
+.btn.primary{background:linear-gradient(135deg,#22d3ee,#a78bfa);color:#0a0a1c;font-weight:800;box-shadow:0 8px 26px -8px rgba(34,211,238,.65)}
+.btn.primary:hover{transform:translateY(-2px);filter:brightness(1.08)}
+.btn.ghost{background:transparent;border-color:var(--line);color:var(--muted)}
+.btn.ghost:hover{color:var(--text);border-color:rgba(255,255,255,.32)}
+.btn.small{padding:7px 14px;font-size:13px;border-radius:10px}
+
+/* ---------- 数据文件状态条 ---------- */
+.store-banner{
+  display:none;align-items:center;gap:12px;flex-wrap:wrap;
+  margin:24px 0 0;padding:13px 18px;border-radius:16px;font-size:13.5px;
+  border:1px dashed rgba(251,191,36,.45);background:rgba(251,191,36,.07);color:#fcd34d;
+}
+.store-banner.show{display:flex}
+.store-banner.ok{border:1px solid rgba(52,211,153,.4);background:rgba(52,211,153,.06);color:#6ee7b7}
+.store-banner .grow{flex:1;min-width:200px}
+
+/* ---------- 实力对比条 ---------- */
+.standings{
+  display:flex;height:38px;border-radius:12px;overflow:hidden;
+  border:1px solid var(--line);background:rgba(255,255,255,.04);
+  margin:30px 0 28px;box-shadow:0 10px 30px -12px rgba(0,0,0,.6);
+}
+.seg{
+  display:flex;align-items:center;justify-content:center;
+  font-size:13px;font-weight:700;color:#0a0a1c;white-space:nowrap;overflow:hidden;
+  text-overflow:ellipsis;min-width:0;transition:width .8s cubic-bezier(.22,1,.36,1);
+  text-shadow:0 1px 0 rgba(255,255,255,.25);
+}
+
+/* ---------- 用户卡片 ---------- */
+.users{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:26px}
+.users-empty{grid-column:1/-1;text-align:center;color:var(--muted);padding:80px 0;font-size:15px}
+
+.card{
+  position:relative;border-radius:26px;padding:24px 24px 20px;
+  background:var(--card);border:1px solid var(--line);
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.35);
+  transition:transform .25s,border-color .25s;
+}
+.card:hover{transform:translateY(-4px)}
+.card::before{
+  content:"";position:absolute;top:-75px;left:50%;transform:translateX(-50%);
+  width:72%;height:150px;background:var(--ac);filter:blur(70px);opacity:.24;
+  border-radius:50%;pointer-events:none;
+}
+.card.leader{border-color:var(--ac);box-shadow:0 0 42px -10px var(--ac),0 20px 60px rgba(0,0,0,.35)}
+.card.enter{animation:cardIn .6s cubic-bezier(.22,1,.36,1) backwards}
+@keyframes cardIn{from{opacity:0;transform:translateY(26px) scale(.96)}}
+
+.card-top{display:flex;align-items:center;gap:13px;position:relative}
+.avatar{
+  width:56px;height:56px;border-radius:18px;flex:none;
+  display:flex;align-items:center;justify-content:center;font-size:30px;cursor:pointer;
+  border:1px solid var(--line);
+  background:linear-gradient(145deg,rgba(255,255,255,.12),rgba(255,255,255,.02));
+  transition:.2s;
+}
+.avatar:hover{transform:scale(1.07) rotate(-4deg)}
+.avatar-img{width:100%;height:100%;object-fit:cover;border-radius:inherit;display:block}
+.who{flex:1;min-width:0}
+.name-line{display:flex;align-items:center;gap:6px}
+.name{font-size:18px;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.crown{font-size:20px;display:inline-block;animation:floaty 2.4s ease-in-out infinite}
+@keyframes floaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+.rank{margin-top:3px;font-size:12px;color:var(--muted)}
+.card-tools{display:flex;gap:6px;opacity:0;transition:.25s}
+.card:hover .card-tools{opacity:1}
+.tool{
+  width:32px;height:32px;border-radius:9px;border:1px solid var(--line);
+  background:rgba(255,255,255,.05);cursor:pointer;font-size:13px;color:var(--muted);
+  transition:.2s;display:flex;align-items:center;justify-content:center;
+}
+.tool:hover{background:rgba(255,255,255,.13);color:var(--text)}
+.tool.danger.armed{background:#fb7185;color:#fff;border-color:#fb7185;font-size:11px;font-weight:700}
+
+.score-row{display:flex;align-items:baseline;gap:10px;margin-top:18px;position:relative}
+.score-label{font-size:13px;color:var(--muted)}
+.score-val{display:flex;align-items:baseline;gap:6px}
+.score-num{
+  font-size:56px;font-weight:800;line-height:1;font-variant-numeric:tabular-nums;
+  background:linear-gradient(180deg,#ffffff,var(--ac));
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+}
+.score-num.pop{animation:pop .7s cubic-bezier(.22,1,.36,1)}
+@keyframes pop{0%{transform:scale(1)}40%{transform:scale(1.16);filter:brightness(1.5)}100%{transform:scale(1)}}
+.score-unit{font-size:14px;color:var(--muted)}
+
+.meter{height:8px;border-radius:99px;background:rgba(255,255,255,.08);overflow:hidden;margin:14px 0 16px;position:relative}
+.meter i{display:block;height:100%;border-radius:99px;background:var(--ac);box-shadow:0 0 12px var(--ac);transition:width .8s cubic-bezier(.22,1,.36,1)}
+
+.add-btn{
+  width:100%;padding:13px;border:none;border-radius:14px;position:relative;
+  background:var(--ac);color:#0a0a1c;font-weight:800;font-size:15px;cursor:pointer;
+  box-shadow:0 8px 22px -8px var(--ac);transition:.2s;font-family:inherit;
+}
+.add-btn:hover{transform:translateY(-2px);filter:brightness(1.12)}
+
+.records{display:flex;flex-direction:column;gap:8px;max-height:262px;overflow-y:auto;margin-top:14px;padding-right:4px;position:relative}
+.records::-webkit-scrollbar{width:6px}
+.records::-webkit-scrollbar-thumb{background:rgba(255,255,255,.16);border-radius:3px}
+.record{
+  display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border-radius:14px;
+  background:rgba(255,255,255,.04);border:1px solid transparent;transition:.2s;
+}
+.record:hover{border-color:var(--line);background:rgba(255,255,255,.07)}
+.r-date{font-size:12px;color:var(--muted);white-space:nowrap;padding-top:2px;min-width:88px}
+.r-why{flex:1;font-size:14px;line-height:1.45;word-break:break-word}
+.r-pts{font-weight:800;font-size:15px;white-space:nowrap}
+.r-pts.pos{color:var(--pos)}
+.r-pts.neg{color:var(--neg)}
+.r-del{
+  opacity:0;border:none;background:transparent;color:var(--muted);cursor:pointer;
+  font-size:12px;padding:2px 4px;transition:.2s;line-height:1;
+}
+.record:hover .r-del{opacity:1}
+.r-del:hover{color:var(--neg)}
+.empty{margin-top:16px;text-align:center;color:var(--muted);font-size:13.5px;padding:26px 0;border:1px dashed var(--line);border-radius:16px}
+
+/* ---------- 弹窗 ---------- */
+.mask{
+  position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;
+  background:rgba(5,5,18,.66);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  opacity:0;pointer-events:none;transition:.25s;
+}
+.mask.show{opacity:1;pointer-events:auto}
+.modal{
+  width:min(432px,92vw);max-height:88vh;overflow-y:auto;
+  background:linear-gradient(160deg,#1a1a3a,#101024);
+  border:1px solid var(--line);border-radius:22px;padding:26px;
+  box-shadow:0 30px 80px rgba(0,0,0,.55);
+  transform:translateY(18px) scale(.96);transition:.25s cubic-bezier(.22,1,.36,1);
+}
+.modal.wide{width:min(680px,94vw)}
+.mask.show .modal{transform:none}
+.modal.shake{animation:shake .5s}
+@keyframes shake{10%,90%{transform:translateX(-2px)}20%,80%{transform:translateX(4px)}30%,50%,70%{transform:translateX(-6px)}40%,60%{transform:translateX(6px)}}
+.modal h3{font-size:20px;margin-bottom:20px}
+.modal-btns{display:flex;gap:10px;justify-content:flex-end;margin-top:10px;flex-wrap:wrap}
+
+.field{margin-bottom:14px}
+.field label{display:block;font-size:12.5px;color:var(--muted);margin-bottom:7px;letter-spacing:.5px}
+input,select{
+  width:100%;padding:12px 14px;border-radius:12px;border:1px solid var(--line);
+  background:rgba(255,255,255,.06);color:var(--text);font-size:15px;outline:none;
+  transition:border-color .2s,box-shadow .2s;font-family:inherit;
+}
+input:focus,select:focus{border-color:var(--mc,#22d3ee);box-shadow:0 0 0 3px rgba(34,211,238,.16)}
+select option{background:#14142c;color:var(--text)}
+.err{min-height:20px;font-size:13px;color:var(--neg);margin-bottom:2px}
+.field-row{display:flex;gap:12px}
+.hint{font-size:12.5px;color:var(--muted);line-height:1.9;margin:4px 0 0}
+.divider{border:none;border-top:1px solid var(--line);margin:16px 0 12px}
+.sect-title{font-size:13px;color:var(--muted);font-weight:700;margin-bottom:10px;letter-spacing:.5px}
+
+.chips{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+.chip{
+  padding:7px 15px;border-radius:99px;border:1px solid var(--line);
+  background:rgba(255,255,255,.05);color:var(--text);cursor:pointer;font-size:13px;transition:.15s;
+}
+.chip:hover{border-color:var(--mc,#22d3ee)}
+.chip.on{background:var(--mc,#22d3ee);color:#0a0a1c;font-weight:800;border-color:transparent}
+
+.avatar-row{display:flex;gap:16px;align-items:flex-start}
+.avatar-big{
+  width:66px;height:66px;border-radius:20px;flex:none;font-size:36px;cursor:pointer;
+  border:1px solid var(--mc,#22d3ee);background:rgba(255,255,255,.05);transition:.2s;
+  display:flex;align-items:center;justify-content:center;
+}
+.avatar-big:hover{transform:scale(1.06) rotate(-4deg)}
+.grow{flex:1}
+
+/* ---------- 历史明细 ---------- */
+.hist-list{display:flex;flex-direction:column;gap:8px;max-height:50vh;overflow-y:auto;margin:14px 0 6px;padding-right:4px}
+.hist-list::-webkit-scrollbar{width:6px}
+.hist-list::-webkit-scrollbar-thumb{background:rgba(255,255,255,.16);border-radius:3px}
+.hist-row{
+  display:flex;align-items:flex-start;gap:12px;padding:11px 14px;border-radius:14px;
+  background:rgba(255,255,255,.04);border:1px solid transparent;transition:.2s;
+}
+.hist-row:hover{border-color:var(--line);background:rgba(255,255,255,.07)}
+.h-date{font-size:12px;color:var(--muted);white-space:nowrap;padding-top:2px;min-width:120px}
+.h-user{font-weight:800;font-size:13.5px;white-space:nowrap;padding-top:1px}
+.h-why{flex:1;font-size:14px;line-height:1.45;word-break:break-word}
+.h-pts{font-weight:800;font-size:15px;white-space:nowrap}
+.h-pts.pos{color:var(--pos)}
+.h-pts.neg{color:var(--neg)}
+.h-empty{text-align:center;color:var(--muted);font-size:13.5px;padding:40px 0;border:1px dashed var(--line);border-radius:16px}
+
+/* ---------- 提示 ---------- */
+.toast{
+  position:fixed;left:50%;bottom:34px;transform:translate(-50%,20px);opacity:0;
+  transition:.3s;z-index:1000;pointer-events:none;
+  background:rgba(20,20,48,.92);border:1px solid var(--line);
+  padding:12px 24px;border-radius:99px;font-size:14px;
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  box-shadow:0 14px 40px rgba(0,0,0,.5);max-width:86vw;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+.toast.ok{border-color:rgba(52,211,153,.55)}
+.toast.warn{border-color:rgba(251,113,133,.55)}
+
+.foot{margin-top:44px;text-align:center;color:var(--muted);font-size:12.5px;letter-spacing:.5px;line-height:2}
+
+@media (max-width:560px){
+  .wrap{padding:28px 14px 56px}
+  h1{font-size:34px}
+  .score-num{font-size:46px}
+  .standings{height:32px}
+  .seg{font-size:11px}
+  .h-date{min-width:88px}
+}
+</style>
+</head>
+<body>
+
+<div class="orb orb1"></div>
+<div class="orb orb2"></div>
+<div class="orb orb3"></div>
+<div class="grid-overlay"></div>
+
+<div class="wrap">
+  <header>
+    <h1>🐻 熊窝积分榜</h1>
+    <p class="sub">记下每一分的努力 · 数据同步保存在 JSON 文件里</p>
+    <div class="actions">
+      <button class="btn primary" id="btnAddScore">🎯 记一笔</button>
+      <button class="btn ghost" id="btnHistory">📜 历史明细</button>
+      <button class="btn ghost" id="btnAddUser">👤 添加用户</button>
+      <button class="btn ghost" id="btnStore">💾 数据文件</button>
+    </div>
+  </header>
+
+  <div class="store-banner" id="storeBanner"></div>
+  <div class="standings" id="standings"></div>
+  <main class="users" id="users"></main>
+
+  <footer class="foot">数据优先保存在 JSON 数据文件中（每次改动自动写入）· 浏览器 localStorage 作为备份<br>更换浏览器时，用「💾 数据文件 → 连接已有文件」重新打开同一个 JSON 即可无缝续用</footer>
+</div>
+
+<!-- 记分弹窗 -->
+<div class="mask" id="scoreMask">
+  <form class="modal" id="scoreForm" novalidate>
+    <h3>🎯 记一笔</h3>
+    <div class="field">
+      <label>给谁记</label>
+      <select id="scoreUser"></select>
+    </div>
+    <div class="field">
+      <label>本次积分（正数加分 · 负数扣分 · 档位 0.1）</label>
+      <div class="chips">
+        <button type="button" class="chip" data-v="0.1">+0.1</button>
+        <button type="button" class="chip" data-v="0.5">+0.5</button>
+        <button type="button" class="chip" data-v="1">+1</button>
+        <button type="button" class="chip" data-v="5">+5</button>
+        <button type="button" class="chip" data-v="-0.1">−0.1</button>
+        <button type="button" class="chip" data-v="-0.5">−0.5</button>
+        <button type="button" class="chip" data-v="-1">−1</button>
+      </div>
+      <input id="scorePts" type="number" step="0.1" placeholder="例如：0.5（扣分请输入负数）" autocomplete="off" />
+    </div>
+    <div class="field">
+      <label>原因</label>
+      <input id="scoreWhy" type="text" maxlength="60" placeholder="例如：帮忙洗碗" autocomplete="off" />
+    </div>
+    <div class="err" id="scoreErr"></div>
+    <div class="modal-btns">
+      <button type="button" class="btn ghost" data-close>取消</button>
+      <button type="submit" class="btn primary">记入 ✨</button>
+    </div>
+  </form>
+</div>
+
+<!-- 用户弹窗 -->
+<div class="mask" id="userMask">
+  <form class="modal" id="userForm" novalidate>
+    <h3 id="userTitle">👤 添加用户</h3>
+    <div class="avatar-row">
+      <button type="button" class="avatar-big" id="avatarBig" title="点击更换头像">🐻</button>
+      <div class="field grow">
+        <label>名字</label>
+        <input id="userName" maxlength="12" placeholder="例如：棕熊布布" autocomplete="off" />
+      </div>
+    </div>
+    <div class="err" id="userErr"></div>
+    <div class="modal-btns">
+      <button type="button" class="btn ghost" data-close>取消</button>
+      <button type="submit" class="btn primary">保存</button>
+    </div>
+  </form>
+</div>
+
+<!-- 历史明细弹窗 -->
+<div class="mask" id="histMask">
+  <div class="modal wide">
+    <h3>📜 历史明细</h3>
+    <div class="chips" id="histFilter"></div>
+    <div class="hist-list" id="histList"></div>
+    <div class="modal-btns">
+      <button type="button" class="btn ghost" data-close>关闭</button>
+    </div>
+  </div>
+</div>
+
+<!-- 存储设置弹窗 -->
+<div class="mask" id="storMask">
+  <div class="modal">
+    <h3>💾 存储</h3>
+    <div class="sect-title">☁️ GitHub 云端同步（两人共用一份数据）</div>
+    <div class="field">
+      <label>仓库（用户名/仓库名）</label>
+      <input id="ghRepo" placeholder="例如：xiaoming/bear-board" autocomplete="off" />
+    </div>
+    <div class="field">
+      <label>Token（需对该仓库 Contents 的读写权限）</label>
+      <input id="ghToken" type="password" placeholder="github_pat_... 或 ghp_..." autocomplete="off" />
+    </div>
+    <div class="field-row">
+      <div class="field grow">
+        <label>数据文件路径</label>
+        <input id="ghPath" value="data.json" autocomplete="off" />
+      </div>
+      <div class="field grow">
+        <label>分支</label>
+        <input id="ghBranch" value="main" autocomplete="off" />
+      </div>
+    </div>
+    <div class="err" id="ghErr"></div>
+    <div class="modal-btns" style="justify-content:flex-start" id="ghBtns"></div>
+    <p class="hint">配置方法：把本页面上传到仓库（命名为 index.html）→ 仓库 Settings → Pages 开启 → 生成一个只授权这个仓库的 Token → 两个人各自填上面两项即可。手机打开同一个网址、填同样配置，记分就会自动同步合并。</p>
+    <hr class="divider" />
+    <div class="sect-title">📄 本地 JSON 文件（单机备份）</div>
+    <p id="storStatus" style="font-size:13.5px;color:var(--muted);line-height:1.8;margin-bottom:16px"></p>
+    <div class="modal-btns" style="justify-content:flex-start" id="storBtns"></div>
+    <div class="modal-btns" style="justify-content:flex-end">
+      <button type="button" class="btn ghost" data-close>关闭</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<input type="file" id="importFile" accept=".json,application/json" style="display:none" />
+
+<script>
+(function () {
+  'use strict';
+
+  // v2：全新默认数据（棕熊布布 / 白熊，历史清空），旧 v1 数据不再读取
+  const STORE_KEY = 'score-board-v2';
+  const EMOJIS = ['🐻','🐻‍❄️','🦊','🐱','🐼','🦁','🐸','🐯','🐨','🦄','🐲','🐙','🦖','🐰','🐧','🦉','🐵','🐷'];
+  const PALETTE = ['#22d3ee','#f472b6','#a78bfa','#fbbf24','#34d399','#fb7185','#60a5fa','#f97316','#2dd4bf','#c084fc'];
+  // 旧版本默认名的自动迁移
+  const LEGACY_NAMES = { '玩家一': '棕熊布布', '玩家二': '棕熊布布', '臭白熊': '白熊' };
+
+  const uid = () => 'id-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
+  const $ = s => document.querySelector(s);
+  const usersEl = $('#users');
+  const standEl = $('#standings');
+
+  const displayedTotals = new Map();
+  let confirmDeleteId = null;
+  let confirmTimer = null;
+  let lastUserKey = '';
+  let histFilterUserId = null;
+
+  /* ================= 数据 ================= */
+  function normalize(data) {
+    if (!data || !Array.isArray(data.users)) return null;
+    const users = data.users.filter(u => u && typeof u.name === 'string');
+    users.forEach(u => {
+      if (LEGACY_NAMES[u.name]) u.name = LEGACY_NAMES[u.name];
+      if (!u.id) u.id = uid();
+      if (!u.emoji) u.emoji = '🙂';
+      if (!u.color) u.color = PALETTE[0];
+      if (typeof u.avatarImg !== 'string' || !u.avatarImg) delete u.avatarImg;
+      u.records = (Array.isArray(u.records) ? u.records : [])
+        .filter(r => r && isFinite(Number(r.points)))
+        .map(r => ({
+          id: r.id || uid(),
+          ts: Number(r.ts) || Date.now(),
+          points: Math.round(Number(r.points) * 10) / 10,
+          reason: r.reason == null ? '' : String(r.reason)
+        }));
+    });
+    return { users };
+  }
+
+  function defaultState() {
+    return { users: [
+      { id: uid(), name: '棕熊布布', emoji: '🐻', avatarImg: 'avatars/bubu.png', color: '#fbbf24', records: [] },
+      { id: uid(), name: '白熊', emoji: '🐻‍❄️', avatarImg: 'avatars/baixiong.png', color: '#60a5fa', records: [] }
+    ]};
+  }
+
+  function loadLocal() {
+    try {
+      const raw = localStorage.getItem(STORE_KEY);
+      if (!raw) return null;
+      return normalize(JSON.parse(raw));
+    } catch (e) { return null; }
+  }
+
+  /* ================= JSON 文件持久化 ================= */
+  const HAS_FS = typeof window.showOpenFilePicker === 'function';
+  let fileHandle = null;   // 已连接的数据文件句柄
+  let fileSynced = false;  // 已获得读写授权、正在同步
+
+  function idbOpen() {
+    return new Promise((res, rej) => {
+      const r = indexedDB.open('scoreboard-fs', 1);
+      r.onupgradeneeded = () => { if (!r.result.objectStoreNames.contains('handles')) r.result.createObjectStore('handles'); };
+      r.onsuccess = () => res(r.result);
+      r.onerror = () => rej(r.error);
+    });
+  }
+  async function idbSet(v) {
+    const db = await idbOpen();
+    return new Promise((res, rej) => {
+      const tx = db.transaction('handles', 'readwrite');
+      tx.objectStore('handles').put(v, 'file');
+      tx.oncomplete = res;
+      tx.onerror = () => rej(tx.error);
+    });
+  }
+  function idbGet() {
+    return new Promise(async (res, rej) => {
+      try {
+        const db = await idbOpen();
+        const tx = db.transaction('handles', 'readonly');
+        const rq = tx.objectStore('handles').get('file');
+        rq.onsuccess = () => res(rq.result || null);
+        rq.onerror = () => rej(rq.error);
+      } catch (e) { rej(e); }
+    });
+  }
+  async function idbDel() {
+    const db = await idbOpen();
+    return new Promise((res, rej) => {
+      const tx = db.transaction('handles', 'readwrite');
+      tx.objectStore('handles').delete('file');
+      tx.oncomplete = res;
+      tx.onerror = () => rej(tx.error);
+    });
+  }
+
+  async function writeToFile() {
+    if (!fileHandle || !fileSynced) return;
+    try {
+      const w = await fileHandle.createWritable();
+      await w.write(JSON.stringify(state, null, 2));
+      await w.close();
+    } catch (e) { toast('写入数据文件失败：' + e.message, 'warn'); }
+  }
+
+  function save() {
+    try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch (e) {}
+    writeToFile();
+    scheduleGhPush();
+  }
+
+  async function loadFromFile() {
+    try {
+      const file = await fileHandle.getFile();
+      const text = await file.text();
+      if (text.trim()) {
+        const data = normalize(JSON.parse(text));
+        if (data) {
+          state = data;
+          displayedTotals.clear();
+          try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch (e) {}
+        }
+      } else {
+        // 空文件：把当前数据写进去
+        await writeToFile();
+      }
+      fileSynced = true;
+    } catch (e) {
+      toast('读取数据文件失败：' + e.message, 'warn');
+    }
+    render(); updateStoreUI();
+  }
+
+  async function connectOpen() {
+    try {
+      const [h] = await window.showOpenFilePicker({
+        types: [{ description: '积分数据 JSON', accept: { 'application/json': ['.json'] } }]
+      });
+      fileHandle = h;
+      try { await idbSet(h); } catch (e) {}
+      await loadFromFile();
+      closeMask(storMask);
+      toast('已连接「' + h.name + '」，之后每次打开会自动同步', 'ok');
+    } catch (e) {
+      if (e && e.name !== 'AbortError') toast('连接失败：' + (e.message || e), 'warn');
+    }
+  }
+
+  async function connectCreate() {
+    try {
+      const h = await window.showSaveFilePicker({
+        suggestedName: '熊窝积分数据.json',
+        types: [{ description: '积分数据 JSON', accept: { 'application/json': ['.json'] } }]
+      });
+      fileHandle = h;
+      try { await idbSet(h); } catch (e) {}
+      fileSynced = true;
+      await writeToFile();
+      render(); updateStoreUI(); closeMask(storMask);
+      toast('已创建「' + h.name + '」，当前数据已写入', 'ok');
+    } catch (e) {
+      if (e && e.name !== 'AbortError') toast('创建失败：' + (e.message || e), 'warn');
+    }
+  }
+
+  async function grantPermission() {
+    try {
+      const p = await fileHandle.requestPermission({ mode: 'readwrite' });
+      if (p === 'granted') {
+        await loadFromFile();
+        toast('已恢复同步', 'ok');
+      } else {
+        toast('未获得文件读写授权', 'warn');
+      }
+    } catch (e) { toast('授权失败：' + (e.message || e), 'warn'); }
+    updateStoreUI();
+  }
+
+  async function disconnectFile() {
+    try { await idbDel(); } catch (e) {}
+    fileHandle = null; fileSynced = false;
+    render(); updateStoreUI();
+    toast('已断开数据文件，数据仅保存在浏览器中');
+  }
+
+  function exportJson() {
+    const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = '熊窝积分数据.json';
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+    toast('已导出备份文件', 'ok');
+  }
+
+  async function importJson(file) {
+    try {
+      const text = await file.text();
+      const data = normalize(JSON.parse(text));
+      if (!data) throw new Error('文件格式不对');
+      state = data;
+      displayedTotals.clear();
+      save(); render(); updateStoreUI();
+      toast('导入成功', 'ok');
+    } catch (e) { toast('导入失败：' + (e.message || e), 'warn'); }
+  }
+
+  /* ================= GitHub 云端同步 ================= */
+  const GH_CFG_KEY = 'score-board-gh-cfg';
+  let ghCfg = null;    // { repo, token, path, branch }
+  let ghSha = null;    // 远端 data.json 的 sha，用作乐观锁防覆盖
+  let ghOk = false;    // 最近一次云端操作是否成功
+  let ghBusy = false;
+  let ghPushTimer = null;
+
+  function loadGhCfg() {
+    try {
+      const c = JSON.parse(localStorage.getItem(GH_CFG_KEY));
+      return (c && c.repo && c.token) ? c : null;
+    } catch (e) { return null; }
+  }
+  function saveGhCfg() {
+    try {
+      if (ghCfg) localStorage.setItem(GH_CFG_KEY, JSON.stringify(ghCfg));
+      else localStorage.removeItem(GH_CFG_KEY);
+    } catch (e) {}
+  }
+
+  function ghApi(path, opts) {
+    opts = opts || {};
+    opts.headers = Object.assign({
+      'Accept': 'application/vnd.github+json',
+      'Authorization': 'Bearer ' + ghCfg.token
+    }, opts.headers || {});
+    return fetch('https://api.github.com' + path, opts).then(async r => {
+      if (!r.ok) {
+        let msg = 'HTTP ' + r.status;
+        try { const j = await r.json(); if (j && j.message) msg = j.message; } catch (e) {}
+        const err = new Error(msg); err.status = r.status; throw err;
+      }
+      return r.json();
+    });
+  }
+  const ghFileUrl = () => '/repos/' + ghCfg.repo + '/contents/' +
+    ghCfg.path.split('/').map(encodeURIComponent).join('/');
+
+  async function ghPull() {
+    // 读取远端数据；文件不存在时返回 null
+    try {
+      const j = await ghApi(ghFileUrl() + '?ref=' + encodeURIComponent(ghCfg.branch || 'main'));
+      ghSha = j.sha;
+      const bytes = Uint8Array.from(atob(String(j.content).replace(/\s/g, '')), c => c.charCodeAt(0));
+      const text = new TextDecoder('utf-8').decode(bytes);
+      return text.trim() ? normalize(JSON.parse(text)) : null;
+    } catch (e) {
+      if (e.status === 404) { ghSha = null; return null; }
+      throw e;
+    }
+  }
+
+  function mergeStates(a, b) {
+    // 记录按 id 取并集（两人记的分都保留），用户信息以本地为准
+    const byId = new Map();
+    a.users.forEach(u => byId.set(u.id, u));
+    b.users.forEach(ru => {
+      const u = byId.get(ru.id);
+      if (!u) { byId.set(ru.id, ru); return; }
+      const ids = new Set(u.records.map(r => r.id));
+      ru.records.forEach(r => { if (!ids.has(r.id)) u.records.push(r); });
+    });
+    return { users: Array.from(byId.values()) };
+  }
+
+  async function ghPush() {
+    if (!ghCfg || ghBusy) return;
+    ghBusy = true;
+    updateStoreUI();
+    try {
+      // 先拉远端合并，避免覆盖对方刚记的分
+      const remote = await ghPull();
+      if (remote && Array.isArray(remote.users)) state = mergeStates(state, remote);
+      const body = {
+        message: '熊窝积分榜数据更新',
+        branch: ghCfg.branch || 'main',
+        content: btoa(unescape(encodeURIComponent(JSON.stringify(state, null, 2))))
+      };
+      if (ghSha) body.sha = ghSha;
+      const j = await ghApi(ghFileUrl(), {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      ghSha = j.content.sha;
+      ghOk = true;
+      try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch (e) {}
+      render();
+    } catch (e) {
+      ghOk = false;
+      toast('云端推送失败：' + (e.message || e), 'warn');
+    } finally {
+      ghBusy = false;
+      updateStoreUI();
+    }
+  }
+
+  function scheduleGhPush() {
+    if (!ghCfg) return;
+    clearTimeout(ghPushTimer);
+    ghPushTimer = setTimeout(ghPush, 1500);
+  }
+
+  function ghErrMsg(msg) { const el = $('#ghErr'); if (el) el.textContent = msg; }
+
+  async function connectGh() {
+    const repo = $('#ghRepo').value.trim();
+    const token = $('#ghToken').value.trim();
+    const path = $('#ghPath').value.trim() || 'data.json';
+    const branch = $('#ghBranch').value.trim() || 'main';
+    ghErrMsg('');
+    if (!/^[\w.-]+\/[\w.-]+$/.test(repo)) return ghErrMsg('仓库要写成「用户名/仓库名」的形式');
+    if (!token) return ghErrMsg('请填写 Token');
+    ghCfg = { repo, token, path, branch };
+    try {
+      const d = await ghPull();
+      if (d && d.users) {
+        state = mergeStates(state, d);
+        displayedTotals.clear();
+      }
+      saveGhCfg();
+      await ghPush();
+      closeMask(storMask);
+      toast('云端同步已开启，两个人的数据会自动合并', 'ok');
+    } catch (e) {
+      ghCfg = null;
+      ghErrMsg('连接失败：' + (e.message || e) + '（检查仓库名、Token 及其权限）');
+    }
+    updateStoreUI();
+  }
+
+  function disconnectGh() {
+    ghCfg = null;
+    saveGhCfg();
+    ghOk = false;
+    renderGhBtns(); updateStoreUI();
+    toast('已断开云端同步，数据仅保存在本机');
+  }
+
+  async function manualPull() {
+    try {
+      const d = await ghPull();
+      if (d && d.users) {
+        state = mergeStates(state, d);
+        displayedTotals.clear();
+        try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch (e) {}
+        render();
+      }
+      ghOk = true;
+      toast('已拉取云端数据', 'ok');
+    } catch (e) {
+      ghOk = false;
+      toast('拉取失败：' + (e.message || e), 'warn');
+    }
+    renderGhBtns(); updateStoreUI();
+  }
+
+  function manualPush() {
+    clearTimeout(ghPushTimer);
+    ghPush();
+  }
+
+  let state = loadLocal() || defaultState();
+  save();
+
+  /* ================= 工具 ================= */
+  function h(tag, attrs) {
+    const el = document.createElement(tag);
+    if (attrs) {
+      Object.keys(attrs).forEach(k => {
+        const v = attrs[k];
+        if (v == null) return;
+        if (k === 'class') el.className = v;
+        else if (k === 'style') el.style.cssText = v;
+        else if (k.slice(0, 2) === 'on') el.addEventListener(k.slice(2), v);
+        else if (k === 'dataset') Object.keys(v).forEach(d => { el.dataset[d] = v[d]; });
+        else el.setAttribute(k, v);
+      });
+    }
+    const kids = [].slice.call(arguments, 2);
+    kids.forEach(function add(c) {
+      if (c == null) return;
+      if (Array.isArray(c)) { c.forEach(add); return; }
+      el.appendChild(typeof c === 'string' ? document.createTextNode(c) : c);
+    });
+    return el;
+  }
+
+  const fmt = n => { n = Number(n) || 0; return Number.isInteger(n) ? String(n) : String(Math.round(n * 100) / 100); };
+  const totalOf = u => Math.round(u.records.reduce((s, r) => s + r.points, 0) * 10) / 10;
+
+  function dateLabel(ts) {
+    const d = new Date(ts), now = new Date();
+    const hm = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+    const same = (a, b) => a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+    if (same(d, now)) return '今天 ' + hm;
+    const yst = new Date(now); yst.setDate(yst.getDate() - 1);
+    if (same(d, yst)) return '昨天 ' + hm;
+    const md = (d.getMonth() + 1) + '月' + d.getDate() + '日';
+    return d.getFullYear() === now.getFullYear() ? md + ' ' + hm : d.getFullYear() + '年' + md;
+  }
+
+  function animateNumber(el, from, to) {
+    if (from === to || !isFinite(from)) { el.textContent = fmt(to); return; }
+    el.classList.add('pop');
+    const dur = 650, t0 = performance.now();
+    (function step(t) {
+      const k = Math.min(1, (t - t0) / dur);
+      const e = 1 - Math.pow(1 - k, 3);
+      el.textContent = fmt(from + (to - from) * e);
+      if (k < 1) requestAnimationFrame(step);
+    })(t0);
+  }
+
+  /* ================= 渲染 ================= */
+  function render() {
+    const scrollPos = new Map();
+    usersEl.querySelectorAll('.card').forEach(c => {
+      const list = c.querySelector('.records');
+      if (list) scrollPos.set(c.dataset.uid, list.scrollTop);
+    });
+
+    const users = state.users;
+    const totals = users.map(totalOf);
+    const maxTotal = users.length ? Math.max(...totals) : 0;
+
+    standEl.innerHTML = '';
+    standEl.style.display = users.length ? 'flex' : 'none';
+    if (users.length) {
+      const posSum = totals.reduce((s, t) => s + Math.max(t, 0), 0);
+      users.forEach((u, i) => {
+        const w = posSum > 0 ? Math.max(totals[i], 0) / posSum * 100 : 100 / users.length;
+        standEl.appendChild(h('div', {
+          class: 'seg',
+          style: 'width:' + w.toFixed(2) + '%;background:' + u.color,
+          title: u.name + '：' + fmt(totals[i]) + ' 分'
+        }, w > 11 ? (u.name + ' ' + fmt(totals[i])) : null));
+      });
+    }
+
+    usersEl.innerHTML = '';
+    if (!users.length) {
+      usersEl.appendChild(h('div', { class: 'users-empty' }, '还没有玩家，点击上方「添加用户」开始吧 👋'));
+      lastUserKey = '';
+      return;
+    }
+
+    const userKey = users.map(u => u.id).join(',');
+    const entrance = userKey !== lastUserKey;
+    lastUserKey = userKey;
+
+    users.forEach((u, i) => {
+      usersEl.appendChild(userCard(u, i, totals, maxTotal, entrance ? i * 0.09 : -1));
+    });
+
+    usersEl.querySelectorAll('.card').forEach(c => {
+      const list = c.querySelector('.records');
+      if (list && scrollPos.has(c.dataset.uid)) list.scrollTop = scrollPos.get(c.dataset.uid);
+    });
+  }
+
+  function userCard(u, idx, totals, maxTotal, delay) {
+    const t = totals[idx];
+    const meterW = maxTotal > 0 ? Math.max(0, Math.min(100, t / maxTotal * 100)) : 0;
+    const rank = 1 + totals.filter(x => x > t).length;
+    const isLeader = t > 0 && t === maxTotal;
+    const records = [...u.records].sort((a, b) => b.ts - a.ts);
+
+    const scoreNum = h('span', { class: 'score-num' });
+    const from = displayedTotals.has(u.id) ? displayedTotals.get(u.id) : 0;
+    animateNumber(scoreNum, from, t);
+    displayedTotals.set(u.id, t);
+
+    return h('div', {
+      class: 'card' + (isLeader ? ' leader' : '') + (delay >= 0 ? ' enter' : ''),
+      style: '--ac:' + u.color + ';animation-delay:' + Math.max(0, delay) + 's',
+      dataset: { uid: u.id }
+    },
+      h('div', { class: 'card-top' },
+        h('button', {
+          class: 'avatar',
+          title: u.avatarImg ? '自定义头像（点击恢复表情）' : '点头像换一换',
+          onclick: () => cycleAvatar(u)
+        }, u.avatarImg ? h('img', { class: 'avatar-img', src: u.avatarImg, alt: '' }) : u.emoji),
+        h('div', { class: 'who' },
+          h('div', { class: 'name-line' },
+            h('span', { class: 'name' }, u.name),
+            isLeader ? h('span', { class: 'crown', title: '当前领先' }, '👑') : null),
+          h('div', { class: 'rank' }, '第 ' + rank + ' 名 · 共 ' + records.length + ' 条记录')),
+        h('div', { class: 'card-tools' },
+          h('button', { class: 'tool', title: '改名 / 编辑', onclick: () => openUserModal(u.id) }, '✏️'),
+          h('button', {
+            class: 'tool danger' + (confirmDeleteId === u.id ? ' armed' : ''),
+            title: '删除该用户（点两次确认）',
+            onclick: () => requestDeleteUser(u)
+          }, confirmDeleteId === u.id ? '确认?' : '🗑️'))),
+      h('div', { class: 'score-row' },
+        h('span', { class: 'score-label' }, '总积分'),
+        h('span', { class: 'score-val' }, scoreNum, h('span', { class: 'score-unit' }, '分'))),
+      h('div', { class: 'meter', title: '与当前最高分的对比' }, h('i', { style: 'width:' + meterW.toFixed(1) + '%' })),
+      h('button', { class: 'add-btn', onclick: () => openScoreModal(u.id) }, '➕ 加分'),
+      records.length
+        ? h('div', { class: 'records' }, records.map(r => recordRow(u, r)))
+        : h('div', { class: 'empty' }, '还没有记录，点「加分」记第一笔吧 ✨'));
+  }
+
+  function recordRow(u, r) {
+    return h('div', { class: 'record' },
+      h('span', { class: 'r-date' }, dateLabel(r.ts)),
+      h('span', { class: 'r-why' }, r.reason),
+      h('span', { class: 'r-pts ' + (r.points >= 0 ? 'pos' : 'neg') }, (r.points > 0 ? '+' : '') + fmt(r.points)),
+      h('button', { class: 'r-del', title: '删除这条记录', onclick: () => delRecord(u.id, r.id) }, '✕'));
+  }
+
+  function delRecord(userId, rid) {
+    const u = state.users.find(x => x.id === userId);
+    if (!u) return;
+    u.records = u.records.filter(r => r.id !== rid);
+    save(); render();
+    toast('已删除该记录');
+  }
+
+  function cycleAvatar(u) {
+    if (u.avatarImg) {
+      delete u.avatarImg;
+      toast('已恢复表情头像，再点可切换表情');
+    } else {
+      const i = EMOJIS.indexOf(u.emoji);
+      u.emoji = EMOJIS[(i + 1) % EMOJIS.length];
+    }
+    save(); render();
+  }
+
+  function requestDeleteUser(u) {
+    if (confirmDeleteId === u.id) {
+      clearTimeout(confirmTimer); confirmDeleteId = null;
+      state.users = state.users.filter(x => x.id !== u.id);
+      displayedTotals.delete(u.id);
+      save(); render();
+      toast('已删除「' + u.name + '」及其全部记录', 'warn');
+    } else {
+      confirmDeleteId = u.id;
+      clearTimeout(confirmTimer);
+      confirmTimer = setTimeout(() => { confirmDeleteId = null; render(); }, 3000);
+      render();
+    }
+  }
+
+  /* ================= 弹窗通用 ================= */
+  const scoreMask = $('#scoreMask'), userMask = $('#userMask'),
+        histMask = $('#histMask'), storMask = $('#storMask');
+  const openMask = m => m.classList.add('show');
+  const closeMask = m => m.classList.remove('show');
+
+  document.querySelectorAll('.mask').forEach(m => {
+    m.addEventListener('mousedown', e => { if (e.target === m) closeMask(m); });
+    m.querySelectorAll('[data-close]').forEach(b => b.addEventListener('click', () => closeMask(m)));
+  });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') document.querySelectorAll('.mask.show').forEach(closeMask);
+  });
+
+  function modalError(errEl, msg) {
+    errEl.textContent = msg;
+    const modal = errEl.closest('.modal');
+    modal.classList.remove('shake'); void modal.offsetWidth; modal.classList.add('shake');
+  }
+
+  /* ================= 记分弹窗 ================= */
+  const scoreForm = $('#scoreForm'), scoreUserSel = $('#scoreUser'),
+        scorePts = $('#scorePts'), scoreWhy = $('#scoreWhy'), scoreErr = $('#scoreErr');
+
+  function scoreAccent() {
+    const u = state.users.find(x => x.id === scoreUserSel.value);
+    scoreMask.style.setProperty('--mc', u ? u.color : '#22d3ee');
+  }
+
+  function openScoreModal(userId) {
+    if (!state.users.length) { toast('先添加一个用户吧', 'warn'); openUserModal(); return; }
+    scoreUserSel.innerHTML = '';
+    state.users.forEach(u => scoreUserSel.appendChild(h('option', { value: u.id }, u.emoji + '  ' + u.name)));
+    scoreUserSel.value = userId || state.users[0].id;
+    scorePts.value = ''; scoreWhy.value = ''; scoreErr.textContent = '';
+    scoreMask.querySelectorAll('.chip').forEach(c => c.classList.remove('on'));
+    scoreAccent();
+    openMask(scoreMask);
+    setTimeout(() => scorePts.focus(), 130);
+  }
+
+  scoreUserSel.addEventListener('change', scoreAccent);
+
+  scoreMask.querySelectorAll('.chip').forEach(ch => ch.addEventListener('click', () => {
+    scorePts.value = ch.dataset.v;
+    scoreMask.querySelectorAll('.chip').forEach(x => x.classList.remove('on'));
+    ch.classList.add('on');
+  }));
+  scorePts.addEventListener('input', () => scoreMask.querySelectorAll('.chip').forEach(x => x.classList.remove('on')));
+
+  scoreForm.addEventListener('submit', e => {
+    e.preventDefault();
+    const u = state.users.find(x => x.id === scoreUserSel.value);
+    const raw = parseFloat(scorePts.value);
+    const pts = Math.round(raw * 10) / 10;
+    const why = scoreWhy.value.trim();
+    if (!why) return modalError(scoreErr, '写一下这次加分的原因吧～');
+    if (!isFinite(raw) || pts === 0) return modalError(scoreErr, '积分要是不为 0 的数字哦（扣分输负数）');
+    if (!u) return modalError(scoreErr, '请选择用户');
+
+    const cardEl = usersEl.querySelector('.card[data-uid="' + u.id + '"]');
+    const rect = cardEl ? cardEl.getBoundingClientRect() : null;
+
+    u.records.push({ id: uid(), ts: Date.now(), points: pts, reason: why });
+    save(); render(); closeMask(scoreMask);
+    toast(u.name + ' ' + (pts > 0 ? '+' : '') + fmt(pts) + ' 分 · ' + why, pts > 0 ? 'ok' : 'warn');
+    if (pts > 0) confetti(rect ? rect.left + rect.width / 2 : innerWidth / 2, rect ? rect.top + 90 : innerHeight / 2);
+  });
+
+  /* ================= 历史明细 ================= */
+  function openHist() {
+    histFilterUserId = null;
+    renderHistFilter(); renderHistList();
+    openMask(histMask);
+  }
+
+  function renderHistFilter() {
+    const box = $('#histFilter');
+    box.innerHTML = '';
+    const mk = (label, id) => {
+      const b = h('button', {
+        class: 'chip' + (histFilterUserId === id ? ' on' : ''),
+        onclick: () => { histFilterUserId = id; renderHistFilter(); renderHistList(); }
+      }, label);
+      box.appendChild(b);
+    };
+    mk('全部', null);
+    state.users.forEach(u => mk(u.emoji + ' ' + u.name, u.id));
+  }
+
+  function renderHistList() {
+    const list = $('#histList');
+    list.innerHTML = '';
+    const recs = [];
+    state.users.forEach(u => u.records.forEach(r => recs.push({ r, u })));
+    recs.sort((a, b) => b.r.ts - a.r.ts);
+    const shown = histFilterUserId ? recs.filter(x => x.u.id === histFilterUserId) : recs;
+    if (!shown.length) {
+      list.appendChild(h('div', { class: 'h-empty' }, '还没有任何记录 ✨'));
+      return;
+    }
+    shown.forEach(({ r, u }) => {
+      list.appendChild(h('div', { class: 'hist-row' },
+        h('span', { class: 'h-date' }, dateLabel(r.ts)),
+        h('span', { class: 'h-user', style: 'color:' + u.color }, u.name),
+        h('span', { class: 'h-why' }, r.reason),
+        h('span', { class: 'h-pts ' + (r.points >= 0 ? 'pos' : 'neg') }, (r.points > 0 ? '+' : '') + fmt(r.points))));
+    });
+  }
+
+  /* ================= 用户弹窗 ================= */
+  const userForm = $('#userForm'), userName = $('#userName'), userErr = $('#userErr'),
+        userTitle = $('#userTitle'), avatarBig = $('#avatarBig');
+  let editingId = null, pendingEmoji = EMOJIS[0], pendingAvatarImg = null;
+
+  function renderAvatarBig() {
+    avatarBig.textContent = '';
+    if (pendingAvatarImg) {
+      const img = document.createElement('img');
+      img.className = 'avatar-img';
+      img.src = pendingAvatarImg;
+      avatarBig.appendChild(img);
+    } else {
+      avatarBig.textContent = pendingEmoji;
+    }
+  }
+
+  function openUserModal(userId) {
+    editingId = userId || null;
+    const u = userId ? state.users.find(x => x.id === userId) : null;
+    pendingEmoji = u ? u.emoji : EMOJIS[Math.floor(Math.random() * EMOJIS.length)];
+    pendingAvatarImg = u && u.avatarImg ? u.avatarImg : null;
+    userTitle.textContent = u ? '✏️ 编辑用户' : '👤 添加用户';
+    userName.value = u ? u.name : '';
+    userErr.textContent = '';
+    renderAvatarBig();
+    openMask(userMask);
+    setTimeout(() => userName.focus(), 130);
+  }
+
+  avatarBig.addEventListener('click', () => {
+    if (pendingAvatarImg) {
+      pendingAvatarImg = null;
+    } else {
+      pendingEmoji = EMOJIS[(EMOJIS.indexOf(pendingEmoji) + 1) % EMOJIS.length];
+    }
+    renderAvatarBig();
+  });
+
+  userForm.addEventListener('submit', e => {
+    e.preventDefault();
+    const name = userName.value.trim();
+    if (!name) return modalError(userErr, '给TA起个名字吧');
+    if (editingId) {
+      const u = state.users.find(x => x.id === editingId);
+      if (u) {
+        u.name = name; u.emoji = pendingEmoji;
+        if (pendingAvatarImg) u.avatarImg = pendingAvatarImg;
+        else delete u.avatarImg;
+      }
+      toast('已更新「' + name + '」');
+    } else {
+      const nu = { id: uid(), name, emoji: pendingEmoji, color: PALETTE[state.users.length % PALETTE.length], records: [] };
+      if (pendingAvatarImg) nu.avatarImg = pendingAvatarImg;
+      state.users.push(nu);
+      toast('欢迎新玩家「' + name + '」加入！', 'ok');
+      confetti(innerWidth / 2, innerHeight / 3);
+    }
+    save(); render(); closeMask(userMask);
+  });
+
+  /* ================= 数据文件 UI ================= */
+  const storeBanner = $('#storeBanner'), storStatus = $('#storStatus'), storBtns = $('#storBtns');
+
+  function storButton(label, cls, fn) {
+    return h('button', { class: 'btn small ' + (cls || 'ghost'), onclick: fn }, label);
+  }
+
+  function updateStoreUI() {
+    // 顶部按钮文字
+    const btnStore = $('#btnStore');
+    if (ghCfg && ghOk) btnStore.textContent = '☁️ 云端同步中';
+    else if (ghCfg) btnStore.textContent = '☁️ 云端异常';
+    else if (!HAS_FS) btnStore.textContent = '💾 备份 / 导入';
+    else if (fileHandle && fileSynced) btnStore.textContent = '💾 已同步：' + fileHandle.name;
+    else if (fileHandle) btnStore.textContent = '💾 需要授权';
+    else btnStore.textContent = '💾 存储';
+
+    // 状态条
+    storeBanner.innerHTML = '';
+    storeBanner.className = 'store-banner';
+    if (ghCfg && ghOk) {
+      storeBanner.classList.add('show', 'ok');
+      storeBanner.appendChild(h('span', { class: 'grow' }, '☁️ GitHub 云端同步已开启（' + ghCfg.repo + '）：改动自动推送、打开自动拉取，两人数据自动合并'));
+      return;
+    }
+    if (ghCfg) {
+      storeBanner.classList.add('show');
+      storeBanner.appendChild(h('span', { class: 'grow' }, '☁️ 云端同步未成功，点「💾 存储」检查配置或重试'));
+      return;
+    }
+    if (!HAS_FS) {
+      storeBanner.classList.add('show');
+      storeBanner.appendChild(h('span', { class: 'grow' }, '当前浏览器不支持直接读写 JSON 文件，数据保存在浏览器中。可用「导出 / 导入」手动备份迁移。'));
+      storeBanner.appendChild(storButton('导出备份', 'primary', exportJson));
+      return;
+    }
+    if (fileHandle && fileSynced) {
+      storeBanner.classList.add('show', 'ok');
+      storeBanner.appendChild(h('span', { class: 'grow' }, '✅ 数据文件「' + fileHandle.name + '」已连接，每次改动都会自动写入'));
+    } else if (fileHandle) {
+      storeBanner.classList.add('show');
+      storeBanner.appendChild(h('span', { class: 'grow' }, '检测到上次使用的数据文件「' + fileHandle.name + '」，点击授权后可继续自动读写'));
+      storeBanner.appendChild(storButton('授权并同步', 'primary', grantPermission));
+    } else {
+      storeBanner.classList.add('show');
+      storeBanner.appendChild(h('span', { class: 'grow' }, '数据目前只保存在浏览器里，建议连接一个 JSON 文件实现真正的持久化（首次选择后以后自动连接）'));
+      storeBanner.appendChild(storButton('打开已有文件', 'primary', connectOpen));
+      storeBanner.appendChild(storButton('新建数据文件', '', connectCreate));
+    }
+  }
+
+  function openStor() {
+    // 云端配置回填
+    $('#ghRepo').value = ghCfg ? ghCfg.repo : '';
+    $('#ghToken').value = ghCfg ? ghCfg.token : '';
+    $('#ghPath').value = ghCfg ? ghCfg.path : 'data.json';
+    $('#ghBranch').value = ghCfg ? (ghCfg.branch || 'main') : 'main';
+    ghErrMsg('');
+    renderGhBtns();
+    storStatus.innerHTML = '';
+    storBtns.innerHTML = '';
+    if (HAS_FS) {
+      if (fileHandle && fileSynced) {
+        storStatus.appendChild(document.createTextNode('当前数据文件：「' + fileHandle.name + '」，状态：自动同步中。数据同时有一份 localStorage 备份。'));
+        storBtns.appendChild(storButton('立即写入一次', 'primary', async () => { await writeToFile(); toast('已写入', 'ok'); }));
+        storBtns.appendChild(storButton('断开连接', '', disconnectFile));
+      } else if (fileHandle) {
+        storStatus.appendChild(document.createTextNode('检测到上次使用的数据文件「' + fileHandle.name + '」，需要重新授权才能读写。'));
+        storBtns.appendChild(storButton('授权并同步', 'primary', grantPermission));
+      } else {
+        storStatus.appendChild(document.createTextNode('尚未连接数据文件。可以打开已有的 JSON 文件，或新建一个；连接后每次改动都会自动写入，下次打开页面自动读取。'));
+        storBtns.appendChild(storButton('打开已有文件', 'primary', connectOpen));
+        storBtns.appendChild(storButton('新建数据文件', '', connectCreate));
+      }
+      storBtns.appendChild(storButton('导出备份', '', exportJson));
+    } else {
+      storStatus.appendChild(document.createTextNode('当前浏览器不支持直接读写文件（需要 Chrome / Edge）。数据保存在浏览器中，可通过导出 / 导入迁移。'));
+      storBtns.appendChild(storButton('导出备份', 'primary', exportJson));
+      storBtns.appendChild(storButton('导入备份', '', () => $('#importFile').click()));
+    }
+    openMask(storMask);
+  }
+
+  function renderGhBtns() {
+    const box = $('#ghBtns');
+    box.innerHTML = '';
+    if (ghCfg) {
+      box.appendChild(storButton(ghOk ? '立即拉取' : '重试连接', 'primary', ghOk ? manualPull : connectGh));
+      if (ghOk) box.appendChild(storButton('立即推送', '', manualPush));
+      box.appendChild(storButton('断开云端', '', disconnectGh));
+    } else {
+      box.appendChild(storButton('☁️ 连接云端', 'primary', connectGh));
+    }
+  }
+
+  $('#importFile').addEventListener('change', e => {
+    const f = e.target.files && e.target.files[0];
+    if (f) importJson(f);
+    e.target.value = '';
+  });
+
+  /* ================= 顶部按钮 / 提示 / 彩带 ================= */
+  $('#btnAddScore').addEventListener('click', () => openScoreModal());
+  $('#btnAddUser').addEventListener('click', () => openUserModal());
+  $('#btnHistory').addEventListener('click', openHist);
+  $('#btnStore').addEventListener('click', openStor);
+
+  let toastTimer = null;
+  function toast(msg, type) {
+    const t = $('#toast');
+    t.textContent = msg;
+    t.className = 'toast show' + (type ? ' ' + type : '');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), 2400);
+  }
+
+  function confetti(x, y) {
+    const colors = ['#22d3ee', '#f472b6', '#a78bfa', '#fbbf24', '#34d399', '#fb7185', '#ffffff'];
+    for (let i = 0; i < 34; i++) {
+      const p = document.createElement('div');
+      const size = 5 + Math.random() * 7;
+      p.style.cssText = 'position:fixed;left:' + x + 'px;top:' + y + 'px;width:' + size + 'px;height:' + (size * .6) + 'px;background:' + colors[i % colors.length] + ';z-index:999;pointer-events:none;border-radius:' + (Math.random() > .5 ? '50%' : '2px') + ';';
+      document.body.appendChild(p);
+      const ang = Math.random() * Math.PI * 2, v = 130 + Math.random() * 240;
+      const dx = Math.cos(ang) * v, dy = Math.sin(ang) * v - 160;
+      p.animate([
+        { transform: 'translate(0,0) rotate(0deg)', opacity: 1 },
+        { transform: 'translate(' + dx + 'px,' + (dy + 340) + 'px) rotate(' + (Math.random() * 720 - 360) + 'deg)', opacity: 0 }
+      ], { duration: 900 + Math.random() * 700, easing: 'cubic-bezier(.15,.6,.4,1)' }).onfinish = () => p.remove();
+    }
+  }
+
+  // 多标签页同步（localStorage 备份层面；云端模式下不覆盖）
+  window.addEventListener('storage', e => {
+    if (e.key === STORE_KEY && !fileSynced && !ghCfg) {
+      state = loadLocal() || { users: [] };
+      displayedTotals.clear();
+      render();
+    }
+  });
+
+  // 启动：优先恢复云端同步，其次恢复本地 JSON 数据文件
+  (async () => {
+    ghCfg = loadGhCfg();
+    if (ghCfg) {
+      try {
+        const d = await ghPull();
+        if (d && d.users) {
+          state = mergeStates(state, d);
+          displayedTotals.clear();
+          try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch (e) {}
+        }
+        ghOk = true;
+      } catch (e) {
+        ghOk = false;
+        toast('云端读取失败：' + (e.message || e), 'warn');
+      }
+      render(); updateStoreUI();
+      return;
+    }
+    if (!HAS_FS) { updateStoreUI(); return; }
+    try {
+      const saved = await idbGet();
+      if (!saved) { updateStoreUI(); return; }
+      fileHandle = saved;
+      const perm = await saved.queryPermission({ mode: 'readwrite' });
+      if (perm === 'granted') {
+        await loadFromFile();
+        toast('已从数据文件「' + saved.name + '」恢复历史记录', 'ok');
+      } else {
+        render(); updateStoreUI();
+      }
+    } catch (e) { updateStoreUI(); }
+  })();
+
+  render();
+  updateStoreUI();
+})();
+</script>
+</body>
+</html>
