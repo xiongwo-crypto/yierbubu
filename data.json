@@ -6,7 +6,14 @@
       "emoji": "🐻",
       "color": "#fbbf24",
       "avatarImg": "avatars/bubu.png",
-      "records": []
+      "records": [
+        {
+          "id": "id-mvnzsfr6-x5u0n8",
+          "ts": 1792942697922,
+          "points": 47,
+          "reason": "初始分"
+        }
+      ]
     },
     {
       "id": "id-mvnzov0f-tldjb0",
