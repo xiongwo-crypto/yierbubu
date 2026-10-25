@@ -14,7 +14,14 @@
       "emoji": "🐻‍❄️",
       "color": "#60a5fa",
       "avatarImg": "avatars/baixiong.png",
-      "records": []
+      "records": [
+        {
+          "id": "id-mvny5nla-8osyli",
+          "ts": 1792939955374,
+          "points": 6,
+          "reason": "创建熊窝积分榜网站"
+        }
+      ]
     }
   ]
 }
