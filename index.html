@@ -4,7 +4,8 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <meta name="color-scheme" content="dark" />
-<title>🐻 熊窝积分榜</title>
+<link rel="icon" type="image/png" href="avatars/logo.png" />
+<title>熊窝积分榜</title>
 <style>
 :root{
   --bg:#080817;
@@ -51,6 +52,11 @@ h1{
   animation:hue 8s linear infinite;
 }
 @keyframes hue{to{background-position:300% 0}}
+.h1-ico{
+  width:1em;height:1em;border-radius:.25em;object-fit:cover;
+  vertical-align:-.12em;margin-right:.18em;
+  box-shadow:0 4px 16px rgba(0,0,0,.4);
+}
 .sub{margin-top:10px;color:var(--muted);font-size:14.5px;letter-spacing:1px}
 .actions{margin-top:22px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
 
@@ -279,8 +285,7 @@ select option{background:#14142c;color:var(--text)}
 
 <div class="wrap">
   <header>
-    <h1>🐻 熊窝积分榜</h1>
-    <p class="sub">记下每一分的努力 · 数据同步保存在 JSON 文件里</p>
+    <h1><img class="h1-ico" src="avatars/logo.png" alt="熊窝积分榜" />熊窝积分榜</h1>
     <div class="actions">
       <button class="btn primary" id="btnAddScore">🎯 记一笔</button>
       <button class="btn ghost" id="btnHistory">📜 历史明细</button>
@@ -408,7 +413,7 @@ select option{background:#14142c;color:var(--text)}
   const EMOJIS = ['🐻','🐻‍❄️','🦊','🐱','🐼','🦁','🐸','🐯','🐨','🦄','🐲','🐙','🦖','🐰','🐧','🦉','🐵','🐷'];
   const PALETTE = ['#22d3ee','#f472b6','#a78bfa','#fbbf24','#34d399','#fb7185','#60a5fa','#f97316','#2dd4bf','#c084fc'];
   // 旧版本默认名的自动迁移
-  const LEGACY_NAMES = { '玩家一': '棕熊布布', '玩家二': '棕熊布布', '臭白熊': '白熊' };
+  const LEGACY_NAMES = { '玩家一': '棕熊', '玩家二': '棕熊', '棕熊布布': '棕熊', '臭白熊': '白熊' };
 
   const uid = () => 'id-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
   const $ = s => document.querySelector(s);
@@ -440,12 +445,22 @@ select option{background:#14142c;color:var(--text)}
           reason: r.reason == null ? '' : String(r.reason)
         }));
     });
+    // 同名用户合并成一个人（跨设备重复生成的默认用户，记录全部保留）
+    for (let i = 0; i < users.length; i++) {
+      for (let j = users.length - 1; j > i; j--) {
+        if (users[j].name === users[i].name) {
+          const ids = new Set(users[i].records.map(r => r.id));
+          users[j].records.forEach(r => { if (!ids.has(r.id)) users[i].records.push(r); });
+          users.splice(j, 1);
+        }
+      }
+    }
     return { users };
   }
 
   function defaultState() {
     return { users: [
-      { id: uid(), name: '棕熊布布', emoji: '🐻', avatarImg: 'avatars/bubu.png', color: '#fbbf24', records: [] },
+      { id: uid(), name: '棕熊', emoji: '🐻', avatarImg: 'avatars/bubu.png', color: '#fbbf24', records: [] },
       { id: uid(), name: '白熊', emoji: '🐻‍❄️', avatarImg: 'avatars/baixiong.png', color: '#60a5fa', records: [] }
     ]};
   }
@@ -666,16 +681,33 @@ select option{background:#14142c;color:var(--text)}
   }
 
   function mergeStates(a, b) {
-    // 记录按 id 取并集（两人记的分都保留），用户信息以本地为准
-    const byId = new Map();
-    a.users.forEach(u => byId.set(u.id, u));
+    // 两台设备各自生成的默认用户内部编号不同但名字相同，
+    // 所以按「编号或名字」匹配；匹配后记录取并集（谁记的分都保留）
+    const out = a.users.map(u => ({
+      id: u.id, name: u.name, emoji: u.emoji, color: u.color,
+      avatarImg: u.avatarImg, records: u.records.slice()
+    }));
+    const find = u => out.find(x => x.id === u.id) || out.find(x => x.name === u.name);
     b.users.forEach(ru => {
-      const u = byId.get(ru.id);
-      if (!u) { byId.set(ru.id, ru); return; }
+      const u = find(ru);
+      if (!u) {
+        out.push({ id: ru.id, name: ru.name, emoji: ru.emoji, color: ru.color, avatarImg: ru.avatarImg, records: ru.records.slice() });
+        return;
+      }
       const ids = new Set(u.records.map(r => r.id));
       ru.records.forEach(r => { if (!ids.has(r.id)) u.records.push(r); });
     });
-    return { users: Array.from(byId.values()) };
+    // 同名用户合并成一个人（保留第一条的全部记录，其余并入）
+    for (let i = 0; i < out.length; i++) {
+      for (let j = out.length - 1; j > i; j--) {
+        if (out[j].name === out[i].name) {
+          const ids = new Set(out[i].records.map(r => r.id));
+          out[j].records.forEach(r => { if (!ids.has(r.id)) out[i].records.push(r); });
+          out.splice(j, 1);
+        }
+      }
+    }
+    return { users: out };
   }
 
   async function ghPush() {
