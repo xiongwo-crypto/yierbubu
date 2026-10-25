@@ -1,0 +1,20 @@
+{
+  "users": [
+    {
+      "id": "id-mvnu0j6d-hwrzr9",
+      "name": "棕熊布布",
+      "emoji": "🐻",
+      "avatarImg": "avatars/bubu.png",
+      "color": "#fbbf24",
+      "records": []
+    },
+    {
+      "id": "id-mvnu0j6d-zkuuds",
+      "name": "白熊",
+      "emoji": "🐻‍❄️",
+      "avatarImg": "avatars/baixiong.png",
+      "color": "#60a5fa",
+      "records": []
+    }
+  ]
+}
