@@ -1,7 +1,7 @@
 {
   "users": [
     {
-      "id": "id-mvnyfmb5-ksncw3",
+      "id": "id-mvnzov0f-zu91xz",
       "name": "棕熊",
       "emoji": "🐻",
       "color": "#fbbf24",
@@ -12,6 +12,12 @@
           "ts": 1792942697922,
           "points": 47,
           "reason": "初始分"
+        },
+        {
+          "id": "id-mvv1cwre-fqnaf5",
+          "ts": 1793368595930,
+          "points": 1.3,
+          "reason": "楠熊篮球连中7球"
         }
       ]
     },
