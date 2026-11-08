@@ -1,7 +1,7 @@
 {
   "users": [
     {
-      "id": "id-mvnyfmb5-ksncw3",
+      "id": "id-mvnzov0f-zu91xz",
       "name": "棕熊",
       "emoji": "🐻",
       "color": "#fbbf24",
@@ -30,6 +30,12 @@
           "ts": 1793507581865,
           "points": 0.5,
           "reason": "挑选辣椒酱"
+        },
+        {
+          "id": "id-mw7pxbgg-stjrv5",
+          "ts": 1794135452992,
+          "points": 2,
+          "reason": "打台球 +臭手嗯转+ 敲定路线错误"
         }
       ]
     },
