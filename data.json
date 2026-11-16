@@ -42,6 +42,12 @@
           "ts": 1794645297896,
           "points": 1,
           "reason": "挑选伯希和"
+        },
+        {
+          "id": "id-mwgjmzuj-4dbuk2",
+          "ts": 1794669089275,
+          "points": 2,
+          "reason": "乒乓球"
         }
       ]
     },
@@ -134,6 +140,12 @@
           "id": "id-mwgjmq2a-ghfa0t",
           "ts": 1794669076594,
           "points": 1,
+          "reason": "洗衣服"
+        },
+        {
+          "id": "id-mwj5iw6t-7vnyc8",
+          "ts": 1794826781813,
+          "points": 0.2,
           "reason": "洗衣服"
         }
       ]
