@@ -3,7 +3,7 @@
     {
       "id": "id-mvnyfmb5-ksncw3",
       "name": "棕熊",
-      "emoji": "🦉",
+      "emoji": "🐻",
       "color": "#fbbf24",
       "records": [
         {
@@ -53,7 +53,7 @@
     {
       "id": "id-mvnzov0f-tldjb0",
       "name": "白熊",
-      "emoji": "🐙",
+      "emoji": "🐻",
       "color": "#60a5fa",
       "records": [
         {
@@ -169,6 +169,12 @@
           "ts": 1795276581655,
           "points": 0.5,
           "reason": "挑选山姆台式烤肠"
+        },
+        {
+          "id": "id-mws0bicp-al7q1b",
+          "ts": 1795362234793,
+          "points": 0.6,
+          "reason": "洗衣服"
         }
       ]
     }
