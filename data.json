@@ -1,10 +1,11 @@
 {
   "users": [
     {
-      "id": "id-mvnyfmb5-ksncw3",
+      "id": "id-mvnzov0f-zu91xz",
       "name": "棕熊",
       "emoji": "🐻",
       "color": "#fbbf24",
+      "avatarImg": "avatars/bubu.png",
       "records": [
         {
           "id": "id-mvnzsfr6-x5u0n8",
@@ -59,8 +60,9 @@
     {
       "id": "id-mvnzov0f-tldjb0",
       "name": "白熊",
-      "emoji": "🐻",
+      "emoji": "🐻‍❄️",
       "color": "#60a5fa",
+      "avatarImg": "avatars/baixiong.png",
       "records": [
         {
           "id": "id-mvny5nla-8osyli",
@@ -181,6 +183,12 @@
           "ts": 1795362234793,
           "points": 0.6,
           "reason": "洗衣服"
+        },
+        {
+          "id": "id-mwyurqtx-lmabte",
+          "ts": 1795776177813,
+          "points": -5,
+          "reason": "楠熊值班迟到"
         }
       ]
     }
