@@ -1,10 +1,11 @@
 {
   "users": [
     {
-      "id": "id-mvnyfmb5-ksncw3",
+      "id": "id-mvnzov0f-zu91xz",
       "name": "棕熊",
       "emoji": "🐻",
       "color": "#fbbf24",
+      "avatarImg": "avatars/bubu.png",
       "records": [
         {
           "id": "id-mvnzsfr6-x5u0n8",
@@ -53,14 +54,21 @@
           "ts": 1795625625542,
           "points": -1,
           "reason": "杳无音讯，出轨张萌"
+        },
+        {
+          "id": "id-mwyus4zz-8dk3qq",
+          "ts": 1795776196175,
+          "points": 1.4,
+          "reason": "投篮8球连中"
         }
       ]
     },
     {
       "id": "id-mvnzov0f-tldjb0",
       "name": "白熊",
-      "emoji": "🐻",
+      "emoji": "🐻‍❄️",
       "color": "#60a5fa",
+      "avatarImg": "avatars/baixiong.png",
       "records": [
         {
           "id": "id-mvny5nla-8osyli",
